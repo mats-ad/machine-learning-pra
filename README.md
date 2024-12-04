@@ -6,6 +6,7 @@ CNN for cancer detection
 - VGG (Visual Geometry Group Networks)
 - Transform Images: https://pytorch.org/vision/stable/auto_examples/transforms/plot_transforms_illustrations.html#sphx-glr-auto-examples-transforms-plot-transforms-illustrations-py
 - Possible issue while cropping images: log sum exp for cancer image training neural network
+- 
 
 
 ChatGPT:
