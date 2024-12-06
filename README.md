@@ -7,6 +7,7 @@ CNN for cancer detection
 - VGG (Visual Geometry Group Networks)
 - Transform Images: https://pytorch.org/vision/stable/auto_examples/transforms/plot_transforms_illustrations.html#sphx-glr-auto-examples-transforms-plot-transforms-illustrations-py
 - Possible issue while cropping images: log sum exp for cancer image training neural network
+- 
 
 ChatGPT:
 Für die Erkennung von Lungen- und Darmkrebs aus Bilddaten gibt es eine Vielzahl von Modellen, die je nach Aufgabe (Klassifikation, Segmentierung, Detektion) geeignet sind. Hier sind zusätzliche Modelle, die speziell für medizinische Bildanalysen und Krebserkennung gut funktionieren:
