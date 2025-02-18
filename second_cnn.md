@@ -106,9 +106,7 @@ class CombinedCancerDataset(Dataset):
 ```python
 transform = transforms.Compose([
     transforms.Resize((256, 256)),
-    transforms.RandomHorizontalFlip(),
-    transforms.RandomVerticalFlip(),
-    transforms.RandomRotation(random.randint(-45, 45)),
+    transforms.RandomRotation(random.randint(-20, 20)),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 ])    
@@ -128,7 +126,7 @@ test_loader = DataLoader(test_dataset, batch_size=16, shuffle=False)
 
 
 ```python
-def train_model(model, train_loader, val_loader, num_epochs=3, lr=0.001):
+def train_model(model, train_loader, val_loader, num_epochs=10, lr=0.001):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
     model.to(device)
@@ -209,12 +207,26 @@ if __name__ == "__main__":
 
     MPS available: True
     Using device: mps
-    Epoch 1, Loss: 0.4206345018103719
-    Validation Loss: 0.25898939264481474, Validation Accuracy: 88.72
-    Epoch 2, Loss: 0.22917348451837896
-    Validation Loss: 0.18764055244734265, Validation Accuracy: 92.24
-    Epoch 3, Loss: 0.18551139252334833
-    Validation Loss: 0.10475627785958432, Validation Accuracy: 95.44
+    Epoch 1, Loss: 0.4235124341532588
+    Validation Loss: 0.2920691029854731, Validation Accuracy: 87.0
+    Epoch 2, Loss: 0.2178545261144638
+    Validation Loss: 0.13566817707667805, Validation Accuracy: 94.32
+    Epoch 3, Loss: 0.17078772465698422
+    Validation Loss: 0.23661497431468634, Validation Accuracy: 91.96
+    Epoch 4, Loss: 0.13823598060905934
+    Validation Loss: 0.09342206173297797, Validation Accuracy: 96.48
+    Epoch 5, Loss: 0.12425606898553669
+    Validation Loss: 0.07567573276521657, Validation Accuracy: 97.0
+    Epoch 6, Loss: 0.10304432532298378
+    Validation Loss: 0.09517993290325075, Validation Accuracy: 96.16
+    Epoch 7, Loss: 0.09134747322138864
+    Validation Loss: 0.0939928342182339, Validation Accuracy: 96.28
+    Epoch 8, Loss: 0.07077265149122104
+    Validation Loss: 0.03471511905614233, Validation Accuracy: 98.8
+    Epoch 9, Loss: 0.0773715130770579
+    Validation Loss: 0.04067395285961244, Validation Accuracy: 98.6
+    Epoch 10, Loss: 0.06142273254875909
+    Validation Loss: 0.03829783347187523, Validation Accuracy: 98.68
     Training abgeschlossen.
 
 
@@ -223,12 +235,12 @@ if __name__ == "__main__":
 
 ```python
 # savving the model
-save_path = './trainierte-modelle/resnet_model.pth'
+save_path = './trainierte-modelle/resnet_model2.pth'
 torch.save(model.state_dict(), save_path)
 print(f"Model saved to {save_path}")
 ```
 
-    Model saved to ./trainierte-modelle/resnet_model.pth
+    Model saved to ./trainierte-modelle/resnet_model2.pth
 
 
 ### Visualisierung des Models
@@ -295,7 +307,7 @@ def test_model(model, test_loader):
 all_labels, all_preds = test_model(model, test_loader)
 ```
 
-    Test Accuracy: 95.56%
+    Test Accuracy: 98.84%
 
 
 ### Confusion Matrix
@@ -312,6 +324,34 @@ plt.show()
 
     
 ![png](second_cnn_files/second_cnn_15_0.png)
+    
+
+
+
+```python
+#train_losses, val_losses, val_accuracies = train_model(model, train_loader, val_loader, num_epochs=10)
+# plotting the loss and accuracy
+def plot_loss_accuracy(train_losses, val_losses, val_accuracies):
+    plt.figure(figsize=(12, 6))
+    plt.subplot(1, 2, 1)
+    plt.plot(train_losses, label='Training loss')
+    plt.plot(val_losses, label='Validation loss')
+    plt.title("Loss")
+    plt.legend()
+
+    plt.subplot(1, 2, 2)
+    plt.plot(val_accuracies, label='Validation accuracy')
+    plt.title("Accuracy")
+    plt.legend()
+
+    plt.show()
+    
+plot_loss_accuracy(train_losses, val_losses, val_accuracies)
+```
+
+
+    
+![png](second_cnn_files/second_cnn_16_0.png)
     
 
 
@@ -356,36 +396,158 @@ def visualize_gradcam(model, data_loader, target_layer):
         plt.title(f"Grad-CAM Overlay")
         plt.show()
 
-visualize_gradcam(model, test_loader, target_layer=model.layer4[-1]) 
+visualize_gradcam(model, test_loader, target_layer=model.layer3[-1]) 
 ```
 
 
     
-![png](second_cnn_files/second_cnn_17_0.png)
+![png](second_cnn_files/second_cnn_18_0.png)
     
 
 
 
     
-![png](second_cnn_files/second_cnn_17_1.png)
+![png](second_cnn_files/second_cnn_18_1.png)
     
 
 
 
     
-![png](second_cnn_files/second_cnn_17_2.png)
+![png](second_cnn_files/second_cnn_18_2.png)
     
 
 
 
     
-![png](second_cnn_files/second_cnn_17_3.png)
+![png](second_cnn_files/second_cnn_18_3.png)
     
 
 
 
     
-![png](second_cnn_files/second_cnn_17_4.png)
+![png](second_cnn_files/second_cnn_18_4.png)
+    
+
+
+
+```python
+from captum.attr import LayerGradCam
+import cv2
+
+def visualize_gradcam_on_images_captum(model, image_paths, target_layer, device='mps'):
+    """
+    Apply Grad-CAM using Captum on specific images given their file paths.
+
+    Args:
+        model (torch.nn.Module): The trained model.
+        image_paths (list): List of paths to images.
+        target_layer (torch.nn.Module): The target layer in the model.
+        device (str): 'cpu' or 'mps'.
+
+    Returns:
+        Displays the Grad-CAM visualizations.
+    """
+
+    # Image preprocessing - same as during training
+    transform = transforms.Compose([
+        transforms.Resize((256, 256)),  # Ensure consistent input size
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+
+    model.to(device)
+    model.eval()
+    
+    # Initialize Captum Grad-CAM
+    grad_cam = LayerGradCam(model, target_layer)
+
+    for image_path in image_paths:
+        # Load and preprocess image
+        image = Image.open(image_path).convert("RGB")
+        input_tensor = transform(image).unsqueeze(0).to(device)
+
+        # Forward pass to get the prediction
+        output = model(input_tensor)
+        pred_label = output.argmax(dim=1).item()  # Get the predicted class
+
+        # Generate Grad-CAM heatmap
+        attributions = grad_cam.attribute(input_tensor, target=pred_label)
+        attributions = attributions.squeeze().cpu().detach().numpy()
+
+        # Normalize attributions to [0, 1] range
+        attributions = np.maximum(attributions, 0)  # ReLU operation
+        attributions = attributions / (attributions.max() + 1e-8)  # Avoid division by zero
+
+        # Convert image to NumPy format for visualization
+        image_rgb = np.array(image) / 255.0  # Normalize to [0,1]
+        image_resized = cv2.resize(image_rgb, (attributions.shape[1], attributions.shape[0]))  # Resize original image to match Grad-CAM
+
+        # Ensure attributions are correctly formatted for OpenCV
+        heatmap = np.uint8(255 * attributions)  # Convert to 8-bit (0-255)
+        heatmap = cv2.applyColorMap(heatmap, cv2.COLORMAP_JET)  # Apply color map
+
+        # Normalize and blend heatmap with original image
+        heatmap = heatmap.astype(np.float32) / 255  # Normalize to 0-1
+        cam_image = (heatmap * 0.5) + (image_resized * 0.5)  # Blend heatmap with original image
+
+        # Display results
+        plt.figure(figsize=(10, 5))
+        plt.subplot(1, 2, 1)
+        plt.imshow(image)
+        plt.title("Original Image")
+        plt.axis("off")
+
+        plt.subplot(1, 2, 2)
+        plt.imshow(cam_image)
+        plt.title(f"Grad-CAM Overlay (Class: {pred_label})")
+        plt.axis("off")
+
+        plt.show()
+
+
+# Example usage with your image paths
+image_paths = [
+    '../lung_colon_image_set/lung_image_sets/lung_aca/lungaca27.jpeg',
+    '../lung_colon_image_set/lung_image_sets/lung_n/lungn378.jpeg',
+    '../lung_colon_image_set/lung_image_sets/lung_scc/lungscc24.jpeg',
+    '../lung_colon_image_set/colon_image_sets/colon_aca/colonca3874.jpeg',
+    '../lung_colon_image_set/colon_image_sets/colon_n/colonn128.jpeg'
+]
+
+# Use the last convolutional layer of your model (modify if needed)
+target_layer = model.layer1  # Change this to your model’s last convolutional layer
+
+visualize_gradcam_on_images_captum(model, image_paths, target_layer, device=device)
+
+```
+
+
+    
+![png](second_cnn_files/second_cnn_19_0.png)
+    
+
+
+
+    
+![png](second_cnn_files/second_cnn_19_1.png)
+    
+
+
+
+    
+![png](second_cnn_files/second_cnn_19_2.png)
+    
+
+
+
+    
+![png](second_cnn_files/second_cnn_19_3.png)
+    
+
+
+
+    
+![png](second_cnn_files/second_cnn_19_4.png)
     
 
 
@@ -394,7 +556,7 @@ visualize_gradcam(model, test_loader, target_layer=model.layer4[-1])
 from lime import lime_image
 from skimage.segmentation import mark_boundaries
 
-def explain_with_lime(model, image_path, all_classes, device='cpu'):
+def explain_with_lime(model, image_path, all_classes, device='mps'):
     """
     Erklärt eine CNN-Vorhersage für ein einzelnes Bild mit LIME.
     
@@ -402,7 +564,7 @@ def explain_with_lime(model, image_path, all_classes, device='cpu'):
         model: Das trainierte CNN-Modell.
         image_path: Pfad zum Bild, das erklärt werden soll.
         all_classes: Liste der Klassennamen.
-        device: 'cpu' oder 'cuda' für Berechnungen auf GPU/CPU.
+        device: 'cpu' oder 'mps' für Berechnungen auf GPU/CPU.
 
     Returns:
         Zeigt das Originalbild und die LIME-Erklärung.
@@ -485,38 +647,63 @@ def explain_multiple_images(model, image_paths, all_classes, device='cpu'):
 
 image_paths = [
     '../lung_colon_image_set/lung_image_sets/lung_aca/lungaca27.jpeg',
-    '../lung_colon_image_set/lung_image_sets/lung_aca/lungaca45.jpeg',
-    '../lung_colon_image_set/lung_image_sets/lung_n/lungn198.jpeg'
+    '../lung_colon_image_set/lung_image_sets/lung_n/lungn378.jpeg',
+    '../lung_colon_image_set/lung_image_sets/lung_scc/lungscc234.jpeg',
+    '../lung_colon_image_set/colon_image_sets/colon_aca/colonca3874.jpeg',
+    '../lung_colon_image_set/colon_image_sets/colon_n/colonn198.jpeg'
 ]
 
 explain_multiple_images(model, image_paths, all_classes, device=device)
 
 ```
 
-    100%|██████████| 1000/1000 [01:13<00:00, 13.63it/s]
+
+      0%|          | 0/1000 [00:00<?, ?it/s]
 
 
 
     
-![png](second_cnn_files/second_cnn_18_1.png)
+![png](second_cnn_files/second_cnn_20_1.png)
     
 
 
-    100%|██████████| 1000/1000 [01:18<00:00, 12.82it/s]
 
-
-
-    
-![png](second_cnn_files/second_cnn_18_3.png)
-    
-
-
-    100%|██████████| 1000/1000 [01:10<00:00, 14.19it/s]
+      0%|          | 0/1000 [00:00<?, ?it/s]
 
 
 
     
-![png](second_cnn_files/second_cnn_18_5.png)
+![png](second_cnn_files/second_cnn_20_3.png)
+    
+
+
+
+      0%|          | 0/1000 [00:00<?, ?it/s]
+
+
+
+    
+![png](second_cnn_files/second_cnn_20_5.png)
+    
+
+
+
+      0%|          | 0/1000 [00:00<?, ?it/s]
+
+
+
+    
+![png](second_cnn_files/second_cnn_20_7.png)
+    
+
+
+
+      0%|          | 0/1000 [00:00<?, ?it/s]
+
+
+
+    
+![png](second_cnn_files/second_cnn_20_9.png)
     
 
 
@@ -616,57 +803,91 @@ def occlusion_sensitivity_multiple_images(model, image_paths, all_classes, mask_
 
 image_paths = [
     '../lung_colon_image_set/lung_image_sets/lung_aca/lungaca27.jpeg',
-    '../lung_colon_image_set/lung_image_sets/lung_aca/lungaca45.jpeg',
-    '../lung_colon_image_set/lung_image_sets/lung_n/lungn198.jpeg'
+    '../lung_colon_image_set/lung_image_sets/lung_n/lungn378.jpeg',
+    '../lung_colon_image_set/lung_image_sets/lung_scc/lungscc234.jpeg',
+    '../lung_colon_image_set/colon_image_sets/colon_aca/colonca3874.jpeg',
+    '../lung_colon_image_set/colon_image_sets/colon_n/colonn198.jpeg'
 ]
 
 occlusion_sensitivity_multiple_images(model, image_paths, all_classes, mask_size=20, stride=10, device=device)
 ```
 
     Current image: ../lung_colon_image_set/lung_image_sets/lung_aca/lungaca27.jpeg
-    Original prediction: lung_aca with probability 0.9996
+    Original prediction: lung_aca with probability 1.0000
 
 
 
     
-![png](second_cnn_files/second_cnn_19_1.png)
-    
-
-
-
-    
-![png](second_cnn_files/second_cnn_19_2.png)
-    
-
-
-    Current image: ../lung_colon_image_set/lung_image_sets/lung_aca/lungaca45.jpeg
-    Original prediction: lung_aca with probability 0.9377
-
-
-
-    
-![png](second_cnn_files/second_cnn_19_4.png)
+![png](second_cnn_files/second_cnn_21_1.png)
     
 
 
 
     
-![png](second_cnn_files/second_cnn_19_5.png)
+![png](second_cnn_files/second_cnn_21_2.png)
     
 
 
-    Current image: ../lung_colon_image_set/lung_image_sets/lung_n/lungn198.jpeg
+    Current image: ../lung_colon_image_set/lung_image_sets/lung_n/lungn378.jpeg
     Original prediction: lung_n with probability 1.0000
 
 
 
     
-![png](second_cnn_files/second_cnn_19_7.png)
+![png](second_cnn_files/second_cnn_21_4.png)
     
 
 
 
     
-![png](second_cnn_files/second_cnn_19_8.png)
+![png](second_cnn_files/second_cnn_21_5.png)
+    
+
+
+    Current image: ../lung_colon_image_set/lung_image_sets/lung_scc/lungscc234.jpeg
+    Original prediction: lung_scc with probability 0.9637
+
+
+
+    
+![png](second_cnn_files/second_cnn_21_7.png)
+    
+
+
+
+    
+![png](second_cnn_files/second_cnn_21_8.png)
+    
+
+
+    Current image: ../lung_colon_image_set/colon_image_sets/colon_aca/colonca3874.jpeg
+    Original prediction: colon_aca with probability 1.0000
+
+
+
+    
+![png](second_cnn_files/second_cnn_21_10.png)
+    
+
+
+
+    
+![png](second_cnn_files/second_cnn_21_11.png)
+    
+
+
+    Current image: ../lung_colon_image_set/colon_image_sets/colon_n/colonn198.jpeg
+    Original prediction: colon_n with probability 1.0000
+
+
+
+    
+![png](second_cnn_files/second_cnn_21_13.png)
+    
+
+
+
+    
+![png](second_cnn_files/second_cnn_21_14.png)
     
 

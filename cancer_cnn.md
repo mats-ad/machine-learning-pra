@@ -232,7 +232,7 @@ Training des Modells auf einem Trainingsdatensatz und Validierung durch einen Va
 
 
 ```python
-def train_model(model, train_loader, val_loader, num_epochs=10, lr=0.005):
+def train_model(model, train_loader, val_loader, num_epochs=10, lr=0.001):
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
     model.to(device)
@@ -315,26 +315,16 @@ if __name__ == "__main__":
 
     MPS available: True
     Using device: mps
-    Epoch 1, Loss: 0.46758669377714396
-    Validation Loss: 0.9903367425901042, Validation Accuracy: 73.2
-    Epoch 2, Loss: 0.24034339060932397
-    Validation Loss: 0.18812683089428647, Validation Accuracy: 93.08
-    Epoch 3, Loss: 0.17604503014376388
-    Validation Loss: 0.724400924389058, Validation Accuracy: 95.36
-    Epoch 4, Loss: 0.14328688383130356
-    Validation Loss: 0.11526526599740461, Validation Accuracy: 94.96
-    Epoch 5, Loss: 0.13623495261566712
-    Validation Loss: 0.07965710531971126, Validation Accuracy: 96.68
-    Epoch 6, Loss: 0.10286432663911255
-    Validation Loss: 0.10621905792875316, Validation Accuracy: 96.28
-    Epoch 7, Loss: 0.1006729231278645
-    Validation Loss: 1.145595564967722, Validation Accuracy: 97.16
-    Epoch 8, Loss: 0.09344085201738635
-    Validation Loss: 0.07637203700459073, Validation Accuracy: 97.2
-    Epoch 9, Loss: 0.07018356757779257
-    Validation Loss: 0.14873086446360892, Validation Accuracy: 98.24
-    Epoch 10, Loss: 0.06956923581469454
-    Validation Loss: 0.09502965668484346, Validation Accuracy: 96.64
+    Epoch 1, Loss: 0.5195937506049871
+    Validation Loss: 0.2298481313919183, Validation Accuracy: 91.8
+    Epoch 2, Loss: 0.25860302503965793
+    Validation Loss: 2.1081911671471683, Validation Accuracy: 91.68
+    Epoch 3, Loss: 0.18599328870140017
+    Validation Loss: 0.17299756196243718, Validation Accuracy: 94.64
+    Epoch 4, Loss: 0.14311425176290796
+    Validation Loss: 0.8986797228044753, Validation Accuracy: 96.4
+    Epoch 5, Loss: 0.1331494641881436
+    Validation Loss: 0.11547417952037121, Validation Accuracy: 95.76
     Training abgeschlossen.
 
 
@@ -398,7 +388,7 @@ def test_model(model, test_loader):
 all_labels, all_preds = test_model(model, test_loader)
 ```
 
-    Test Accuracy: 96.92%
+    Test Accuracy: 96.08%
 
 
 
@@ -496,6 +486,12 @@ visualize_grad_cam(model, test_loader)
     
 ```
 
+
+    
+![png](cancer_cnn_files/cancer_cnn_24_0.png)
+    
+
+
 # Überlagerung mit dem Originalbild
 
 
@@ -537,7 +533,7 @@ def visualize_gradcam(model, data_loader, target_layer):
         plt.title(f"Grad-CAM Overlay")
         plt.show()
 
-visualize_gradcam(model, test_loader, target_layer=model.conv6) 
+visualize_gradcam(model, test_loader, target_layer=model.conv4) 
 ```
 
 
@@ -590,6 +586,7 @@ visualize_gradcam(model, test_loader, target_layer=model.conv6)
 
 
 ```python
+import cv2
 from captum.attr import LayerGradCam
 
 def visualize_gradcam_on_images_captum(model, image_paths, target_layer, device='cpu'):
@@ -658,7 +655,7 @@ def visualize_gradcam_on_images_captum(model, image_paths, target_layer, device=
 
         plt.show()
 
-target_layer = model.conv2  
+target_layer = model.conv3  
 
 visualize_gradcam_on_images_captum(model, image_paths, target_layer, device=device)
 
@@ -785,7 +782,8 @@ explain_multiple_images(model, image_paths, all_classes, device=device)
 
 ```
 
-    100%|██████████| 1000/1000 [00:48<00:00, 20.54it/s]
+
+      0%|          | 0/1000 [00:00<?, ?it/s]
 
 
 
@@ -794,7 +792,8 @@ explain_multiple_images(model, image_paths, all_classes, device=device)
     
 
 
-    100%|██████████| 1000/1000 [00:49<00:00, 20.09it/s]
+
+      0%|          | 0/1000 [00:00<?, ?it/s]
 
 
 
@@ -803,7 +802,8 @@ explain_multiple_images(model, image_paths, all_classes, device=device)
     
 
 
-    100%|██████████| 1000/1000 [00:54<00:00, 18.40it/s]
+
+      0%|          | 0/1000 [00:00<?, ?it/s]
 
 
 
@@ -812,7 +812,8 @@ explain_multiple_images(model, image_paths, all_classes, device=device)
     
 
 
-    100%|██████████| 1000/1000 [00:50<00:00, 19.75it/s]
+
+      0%|          | 0/1000 [00:00<?, ?it/s]
 
 
 
@@ -821,7 +822,8 @@ explain_multiple_images(model, image_paths, all_classes, device=device)
     
 
 
-    100%|██████████| 1000/1000 [00:52<00:00, 19.04it/s]
+
+      0%|          | 0/1000 [00:00<?, ?it/s]
 
 
 
@@ -937,6 +939,86 @@ occlusion_sensitivity_multiple_images(model, image_paths, all_classes, mask_size
 
 ```
 
+    Current image: ../lung_colon_image_set/lung_image_sets/lung_aca/lungaca27.jpeg
+    Original prediction: lung_aca with probability 0.9932
+
+
+
+    
+![png](cancer_cnn_files/cancer_cnn_31_1.png)
+    
+
+
+
+    
+![png](cancer_cnn_files/cancer_cnn_31_2.png)
+    
+
+
+    Current image: ../lung_colon_image_set/lung_image_sets/lung_n/lungn378.jpeg
+    Original prediction: lung_n with probability 0.9999
+
+
+
+    
+![png](cancer_cnn_files/cancer_cnn_31_4.png)
+    
+
+
+
+    
+![png](cancer_cnn_files/cancer_cnn_31_5.png)
+    
+
+
+    Current image: ../lung_colon_image_set/lung_image_sets/lung_scc/lungscc234.jpeg
+    Original prediction: lung_scc with probability 0.4999
+
+
+
+    
+![png](cancer_cnn_files/cancer_cnn_31_7.png)
+    
+
+
+
+    
+![png](cancer_cnn_files/cancer_cnn_31_8.png)
+    
+
+
+    Current image: ../lung_colon_image_set/colon_image_sets/colon_aca/colonca3874.jpeg
+    Original prediction: colon_aca with probability 0.9996
+
+
+
+    
+![png](cancer_cnn_files/cancer_cnn_31_10.png)
+    
+
+
+
+    
+![png](cancer_cnn_files/cancer_cnn_31_11.png)
+    
+
+
+    Current image: ../lung_colon_image_set/colon_image_sets/colon_n/colonn198.jpeg
+    Original prediction: colon_n with probability 0.9453
+
+
+
+    
+![png](cancer_cnn_files/cancer_cnn_31_13.png)
+    
+
+
+
+    
+![png](cancer_cnn_files/cancer_cnn_31_14.png)
+    
+
+
 
 ```python
 from captum.attr import Occlusion
@@ -962,6 +1044,7 @@ def occlusion_sensitivity_captum(model, image_path, all_classes, mask_size=20, s
     # Image transformation as used in training
     transform = transforms.Compose([
         transforms.Resize((256, 256)),
+        transforms.RandomRotation(random.randint(0,20)),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
@@ -1048,7 +1131,7 @@ occlusion_sensitivity_multiple_images_captum(model, image_paths, all_classes, ma
 ```
 
     Processing image: ../lung_colon_image_set/lung_image_sets/lung_aca/lungaca27.jpeg
-    Predicted class: lung_aca (probability: 0.9998)
+    Predicted class: lung_aca (probability: 0.9858)
 
 
 
@@ -1080,7 +1163,7 @@ occlusion_sensitivity_multiple_images_captum(model, image_paths, all_classes, ma
 
 
     Processing image: ../lung_colon_image_set/lung_image_sets/lung_scc/lungscc234.jpeg
-    Predicted class: lung_scc (probability: 0.9767)
+    Predicted class: lung_scc (probability: 0.4999)
 
 
 
@@ -1096,7 +1179,7 @@ occlusion_sensitivity_multiple_images_captum(model, image_paths, all_classes, ma
 
 
     Processing image: ../lung_colon_image_set/colon_image_sets/colon_aca/colonca3874.jpeg
-    Predicted class: colon_aca (probability: 1.0000)
+    Predicted class: colon_aca (probability: 0.9893)
 
 
 
@@ -1112,7 +1195,7 @@ occlusion_sensitivity_multiple_images_captum(model, image_paths, all_classes, ma
 
 
     Processing image: ../lung_colon_image_set/colon_image_sets/colon_n/colonn198.jpeg
-    Predicted class: colon_n (probability: 1.0000)
+    Predicted class: colon_n (probability: 0.9498)
 
 
 
@@ -1130,12 +1213,6 @@ occlusion_sensitivity_multiple_images_captum(model, image_paths, all_classes, ma
 
 ```python
 from captum.attr import GuidedBackprop
-
-transform = transforms.Compose([
-    transforms.Resize((256, 256)),  
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-])
 
 def preprocess_image(image_path, device):
     """Loads and preprocesses an image."""
